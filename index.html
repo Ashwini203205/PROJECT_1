@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Artisan Gallery — Fine Art & Curated Collections</title>
+  <meta name="description"
+    content="Discover and collect extraordinary artworks from world-class artists. Paintings, sculptures, photography, and digital art curated for discerning collectors.">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="icon"
+    href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎨</text></svg>">
+</head>
+
+<body>
+
+  <!-- Loading Screen -->
+  <div class="loader-overlay" id="loader">
+    <div class="loader-logo">Artisan <span>Gallery</span></div>
+    <div class="loader-bar">
+      <div class="loader-fill"></div>
+    </div>
+  </div>
+
+  <!-- Toast Container -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- Navigation -->
+  <nav class="navbar" id="navbar">
+    <div class="container nav-inner">
+      <a href="#" class="nav-logo" onclick="navigateTo('home')">Artisan <span>Gallery</span></a>
+      <div class="nav-links" id="navLinks">
+        <a href="#" class="active" data-page="home" onclick="navigateTo('home')">Home</a>
+        <a href="#" data-page="gallery" onclick="navigateTo('gallery')">Gallery</a>
+        <a href="#" data-page="about" onclick="navigateTo('about')">About</a>
+        <a href="#" data-page="contact" onclick="navigateTo('contact')">Contact</a>
+      </div>
+      <div class="nav-actions">
+        <button class="btn-icon" id="searchBtn" onclick="toggleSearch()" aria-label="Search">
+          <i class="fas fa-search"></i>
+        </button>
+        <button class="btn-icon" id="wishlistNavBtn" onclick="navigateTo('gallery')" aria-label="Wishlist">
+          <i class="fas fa-heart"></i>
+        </button>
+        <button class="btn-icon" id="cartBtn" onclick="toggleCart()" style="position:relative" aria-label="Cart">
+          <i class="fas fa-shopping-bag"></i>
+          <span class="cart-badge" id="cartBadge" style="display:none">0</span>
+        </button>
+        <button class="btn-icon" id="userBtn" onclick="toggleAuth()" aria-label="Account">
+          <i class="fas fa-user"></i>
+        </button>
+        <button class="hamburger" id="hamburger" onclick="toggleMobile()">
+          <span></span><span></span><span></span>
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Search Overlay -->
+  <div class="search-overlay" id="searchOverlay">
+    <div class="search-inner">
+      <div class="search-input-wrap">
+        <i class="fas fa-search"></i>
+        <input type="text" id="searchInput" placeholder="Search artworks, artists, styles..."
+          oninput="handleSearch(this.value)">
+      </div>
+      <div class="search-results" id="searchResults"></div>
+      <p style="text-align:center;margin-top:20px;color:var(--text-muted);font-size:0.85rem">Press ESC to close</p>
+    </div>
+  </div>
+
+  <!-- Cart Sidebar -->
+  <div class="cart-backdrop" id="cartBackdrop" onclick="toggleCart()"></div>
+  <div class="cart-sidebar" id="cartSidebar">
+    <div class="cart-header">
+      <h3>Your Cart (<span id="cartCount">0</span>)</h3>
+      <button class="btn-icon" onclick="toggleCart()"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="cart-items" id="cartItems">
+      <div class="cart-empty"><i class="fas fa-shopping-bag"></i>
+        <p>Your cart is empty</p>
+      </div>
+    </div>
+    <div class="cart-footer">
+      <div class="cart-total"><span>Subtotal</span><span class="amount" id="cartTotal">$0.00</span></div>
+      <button class="btn btn-primary" style="width:100%;justify-content:center" onclick="proceedToCheckout()">Proceed to
+        Checkout</button>
+      <button class="btn btn-ghost" style="width:100%;justify-content:center;margin-top:8px"
+        onclick="toggleCart()">Continue Shopping</button>
+    </div>
+  </div>
+
+  <!-- Auth Modal -->
+  <div class="modal-overlay" id="authOverlay" onclick="closeModalOnBackdrop(event, 'authOverlay')">
+    <div class="modal auth-modal">
+      <button class="modal-close" onclick="toggleAuth()"><i class="fas fa-times"></i></button>
+      <div class="auth-tabs">
+        <div class="auth-tab active" data-tab="login" onclick="switchAuthTab('login')">Sign In</div>
+        <div class="auth-tab" data-tab="register" onclick="switchAuthTab('register')">Register</div>
+      </div>
+      <div id="loginForm">
+        <div class="form-group"><label>Email Address</label><input type="email" id="loginEmail"
+            placeholder="your@email.com"></div>
+        <div class="form-group"><label>Password</label><input type="password" id="loginPassword" placeholder="••••••••">
+        </div>
+        <button class="btn btn-primary" style="width:100%;justify-content:center" onclick="handleLogin()">Sign
+          In</button>
+        <p style="text-align:center;margin-top:16px;font-size:0.85rem;color:var(--text-muted)">Demo: any email &
+          password works</p>
+      </div>
+      <div id="registerForm" style="display:none">
+        <div class="form-group"><label>Full Name</label><input type="text" placeholder="Your Name"></div>
+        <div class="form-group"><label>Email Address</label><input type="email" placeholder="your@email.com"></div>
+        <div class="form-group"><label>Password</label><input type="password" placeholder="••••••••"></div>
+        <div class="form-group"><label>Confirm Password</label><input type="password" placeholder="••••••••"></div>
+        <button class="btn btn-primary" style="width:100%;justify-content:center" onclick="handleRegister()">Create
+          Account</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Product Detail Modal -->
+  <div class="modal-overlay" id="productModal" onclick="closeModalOnBackdrop(event, 'productModal')">
+    <div class="modal">
+      <button class="modal-close" onclick="closeProductModal()"><i class="fas fa-times"></i></button>
+      <div class="modal-body" id="productModalBody"></div>
+    </div>
+  </div>
+
+  <!-- Success Overlay -->
+  <div class="success-overlay" id="successOverlay">
+    <div class="success-content">
+      <div class="success-icon"><i class="fas fa-check"></i></div>
+      <h2>Order Confirmed!</h2>
+      <p>Thank you for your purchase. Your exquisite art pieces will be carefully packaged and delivered to your
+        doorstep.</p>
+      <div class="order-id" id="orderId">Order #AG-000000</div>
+      <button class="btn btn-primary" onclick="closeSuccess()">Continue Shopping</button>
+    </div>
+  </div>
+
+  <!-- ===================== MAIN CONTENT ===================== -->
+  <main id="mainContent">
+
+    <!-- HOME PAGE -->
+    <div id="page-home">
+      <!-- Hero Section -->
+      <section class="hero" id="heroSection">
+        <div class="hero-bg"></div>
+        <div class="hero-content">
+          <span class="hero-label">Established 2024 — Curated Fine Art</span>
+          <h1>Where Art Meets <em>Passion</em></h1>
+          <p>Discover extraordinary artworks from visionary artists around the world. Each piece tells a story waiting
+            to become part of yours.</p>
+          <div class="hero-btns">
+            <button class="btn btn-primary" onclick="navigateTo('gallery')"><i class="fas fa-th-large"></i> Explore
+              Collection</button>
+            <button class="btn btn-outline" onclick="navigateTo('about')"><i class="fas fa-play"></i> Our Story</button>
+          </div>
+        </div>
+        <div class="hero-scroll"><i class="fas fa-chevron-down"></i></div>
+      </section>
+
+      <!-- Marquee -->
+      <section class="marquee-section">
+        <div class="marquee-track">
+          <span class="marquee-item">Oil Paintings <span class="dot"></span></span>
+          <span class="marquee-item">Contemporary Art <span class="dot"></span></span>
+          <span class="marquee-item">Sculptures <span class="dot"></span></span>
+          <span class="marquee-item">Photography <span class="dot"></span></span>
+          <span class="marquee-item">Digital Art <span class="dot"></span></span>
+          <span class="marquee-item">Watercolors <span class="dot"></span></span>
+          <span class="marquee-item">Abstract Art <span class="dot"></span></span>
+          <span class="marquee-item">Mixed Media <span class="dot"></span></span>
+          <span class="marquee-item">Oil Paintings <span class="dot"></span></span>
+          <span class="marquee-item">Contemporary Art <span class="dot"></span></span>
+          <span class="marquee-item">Sculptures <span class="dot"></span></span>
+          <span class="marquee-item">Photography <span class="dot"></span></span>
+          <span class="marquee-item">Digital Art <span class="dot"></span></span>
+          <span class="marquee-item">Watercolors <span class="dot"></span></span>
+          <span class="marquee-item">Abstract Art <span class="dot"></span></span>
+          <span class="marquee-item">Mixed Media <span class="dot"></span></span>
+        </div>
+      </section>
+
+      <!-- Categories -->
+      <section class="section" id="categoriesSection">
+        <div class="container">
+          <div class="section-header fade-in">
+            <span class="label">Browse By Style</span>
+            <h2>Curated Categories</h2>
+            <div class="gold-line"></div>
+            <p>Explore our carefully curated collections spanning centuries of artistic excellence</p>
+          </div>
+          <div class="categories-grid">
+            <div class="category-card fade-in" onclick="filterByCategory('paintings')">
+              <img src="https://images.unsplash.com/photo-1579783902614-a3fb3927b6a5?w=600&q=80" alt="Paintings"
+                loading="lazy">
+              <div class="category-overlay">
+                <h3>Paintings</h3>
+                <p>324 Artworks</p>
+              </div>
+            </div>
+            <div class="category-card fade-in" onclick="filterByCategory('sculpture')">
+              <img src="https://images.unsplash.com/photo-1544413164-5f1b361f5bfa?w=600&q=80" alt="Sculptures"
+                loading="lazy">
+              <div class="category-overlay">
+                <h3>Sculptures</h3>
+                <p>156 Artworks</p>
+              </div>
+            </div>
+            <div class="category-card fade-in" onclick="filterByCategory('photography')">
+              <img src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=600&q=80" alt="Photography"
+                loading="lazy">
+              <div class="category-overlay">
+                <h3>Photography</h3>
+                <p>218 Artworks</p>
+              </div>
+            </div>
+            <div class="category-card fade-in" onclick="filterByCategory('digital')">
+              <img src="https://images.unsplash.com/photo-1634017839464-5c339afa60f0?w=600&q=80" alt="Digital Art"
+                loading="lazy">
+              <div class="category-overlay">
+                <h3>Digital Art</h3>
+                <p>197 Artworks</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Featured Products -->
+      <section class="section" style="padding-top:0">
+        <div class="container">
+          <div class="section-header fade-in">
+            <span class="label">Handpicked For You</span>
+            <h2>Featured Masterpieces</h2>
+            <div class="gold-line"></div>
+          </div>
+          <div class="products-grid" id="featuredGrid"></div>
+          <div style="text-align:center;margin-top:50px" class="fade-in">
+            <button class="btn btn-outline" onclick="navigateTo('gallery')">View All Collection <i
+                class="fas fa-arrow-right"></i></button>
+          </div>
+        </div>
+      </section>
+
+      <!-- About Banner -->
+      <section class="section" style="padding:0">
+        <div class="container">
+          <div class="about-grid fade-in">
+            <div class="about-image">
+              <img src="https://images.unsplash.com/photo-1513364776144-60967b0f800f?w=800&q=80"
+                alt="Art Gallery Interior" loading="lazy">
+            </div>
+            <div class="about-text">
+              <span class="label"
+                style="color:var(--gold);font-size:0.75rem;letter-spacing:4px;text-transform:uppercase">Our
+                Philosophy</span>
+              <h2 style="font-family:var(--font-heading);margin-top:12px">Art Should Move You</h2>
+              <p>At Artisan Gallery, we believe every piece of art carries the soul of its creator. We partner with over
+                200 emerging and established artists worldwide to bring you works that inspire, challenge, and transform
+                spaces.</p>
+              <p>Each artwork in our collection is authenticated, professionally framed, and delivered with a
+                certificate of provenance.</p>
+              <div class="stats-grid" style="margin-top:30px">
+                <div class="stat-item">
+                  <div class="number">200+</div>
+                  <div class="label">Artists</div>
+                </div>
+                <div class="stat-item">
+                  <div class="number">5K+</div>
+                  <div class="label">Artworks</div>
+                </div>
+                <div class="stat-item">
+                  <div class="number">12K+</div>
+                  <div class="label">Collectors</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Testimonials -->
+      <section class="section" id="testimonialsSection">
+        <div class="container">
+          <div class="section-header fade-in">
+            <span class="label">What Collectors Say</span>
+            <h2>Trusted by Art Lovers</h2>
+            <div class="gold-line"></div>
+          </div>
+          <div class="testimonials-grid">
+            <div class="testimonial-card fade-in">
+              <p>The curation at Artisan Gallery is impeccable. I've purchased three pieces and each one transformed the
+                energy of my living space. The quality and packaging were museum-grade.</p>
+              <div class="testimonial-author">
+                <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&q=80" alt="Sarah M.">
+                <div>
+                  <div class="name">Sarah Mitchell</div>
+                  <div class="role">Interior Designer, NYC</div>
+                </div>
+              </div>
+            </div>
+            <div class="testimonial-card fade-in">
+              <p>As a first-time collector, the team guided me through every step. The artwork arrived beautifully
+                packaged with authentication papers. It's now the centerpiece of my office.</p>
+              <div class="testimonial-author">
+                <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&q=80" alt="James R.">
+                <div>
+                  <div class="name">James Rodriguez</div>
+                  <div class="role">Tech Entrepreneur</div>
+                </div>
+              </div>
+            </div>
+            <div class="testimonial-card fade-in">
+              <p>Finding emerging artists before they go mainstream is a thrill. Artisan Gallery has an incredible eye
+                for talent. Three of my early purchases have already tripled in value.</p>
+              <div class="testimonial-author">
+                <img src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&q=80" alt="Emily K.">
+                <div>
+                  <div class="name">Emily Kawasaki</div>
+                  <div class="role">Art Collector, London</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Newsletter -->
+      <section class="section">
+        <div class="container">
+          <div class="newsletter fade-in">
+            <h2>Join Our Collector Circle</h2>
+            <p>Get exclusive access to new arrivals, artist spotlights, and collector events.</p>
+            <div class="newsletter-form">
+              <input type="email" placeholder="Enter your email address" id="newsletterEmail">
+              <button class="btn btn-primary" onclick="subscribeNewsletter()">Subscribe</button>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- GALLERY PAGE -->
+    <div id="page-gallery" style="display:none">
+      <div class="page-hero">
+        <div class="container">
+          <span class="label"
+            style="color:var(--gold);font-size:0.75rem;letter-spacing:4px;text-transform:uppercase;display:block;margin-bottom:12px">Our
+            Collection</span>
+          <h1>Art Gallery</h1>
+          <p>Explore over 5,000 curated works from 200+ global artists</p>
+        </div>
+      </div>
+      <section class="section" style="padding-top:40px">
+        <div class="container">
+          <div class="filters-bar">
+            <div class="filter-tabs" id="filterTabs">
+              <button class="filter-tab active" data-category="all" onclick="filterProducts('all')">All Works</button>
+              <button class="filter-tab" data-category="paintings"
+                onclick="filterProducts('paintings')">Paintings</button>
+              <button class="filter-tab" data-category="sculpture"
+                onclick="filterProducts('sculpture')">Sculptures</button>
+              <button class="filter-tab" data-category="photography"
+                onclick="filterProducts('photography')">Photography</button>
+              <button class="filter-tab" data-category="digital" onclick="filterProducts('digital')">Digital
+                Art</button>
+              <button class="filter-tab" data-category="mixed" onclick="filterProducts('mixed')">Mixed Media</button>
+            </div>
+            <div class="filter-sort">
+              <select id="sortSelect" onchange="sortProducts(this.value)">
+                <option value="featured">Sort by: Featured</option>
+                <option value="price-low">Price: Low to High</option>
+                <option value="price-high">Price: High to Low</option>
+                <option value="name">Name: A — Z</option>
+                <option value="newest">Newest First</option>
+              </select>
+            </div>
+          </div>
+          <div class="products-grid" id="galleryGrid"></div>
+        </div>
+      </section>
+    </div>
+
+    <!-- ABOUT PAGE -->
+    <div id="page-about" style="display:none">
+      <div class="page-hero">
+        <div class="container">
+          <span class="label"
+            style="color:var(--gold);font-size:0.75rem;letter-spacing:4px;text-transform:uppercase;display:block;margin-bottom:12px">Our
+            Story</span>
+          <h1>About Artisan Gallery</h1>
+          <p>Where passion for art meets exceptional curation</p>
+        </div>
+      </div>
+      <section class="section">
+        <div class="container">
+          <div class="about-grid fade-in">
+            <div class="about-image">
+              <img src="https://images.unsplash.com/photo-1594608661623-aa0bd3a69d98?w=800&q=80" alt="Gallery Space"
+                loading="lazy">
+            </div>
+            <div class="about-text">
+              <h2>A Decade of Artistic Excellence</h2>
+              <p>Founded in 2014, Artisan Gallery began as a small studio in Manhattan's Chelsea art district. Today,
+                we've grown into one of the world's leading online art platforms, connecting discerning collectors with
+                extraordinary artists.</p>
+              <p>Our team of expert curators travels the globe to discover emerging talent and established masters
+                alike. Every artwork in our collection is hand-selected, authenticated, and comes with a certificate of
+                provenance.</p>
+              <p>We believe art should be accessible, yet exceptional. That's why we offer flexible payment plans,
+                complimentary art advisory services, and a 30-day satisfaction guarantee on every purchase.</p>
+            </div>
+          </div>
+          <div class="stats-grid fade-in" style="margin-top:80px">
+            <div class="stat-item">
+              <div class="number">200+</div>
+              <div class="label">Global Artists</div>
+            </div>
+            <div class="stat-item">
+              <div class="number">5,000+</div>
+              <div class="label">Curated Artworks</div>
+            </div>
+            <div class="stat-item">
+              <div class="number">12,000+</div>
+              <div class="label">Happy Collectors</div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- CONTACT PAGE -->
+    <div id="page-contact" style="display:none">
+      <div class="page-hero">
+        <div class="container">
+          <span class="label"
+            style="color:var(--gold);font-size:0.75rem;letter-spacing:4px;text-transform:uppercase;display:block;margin-bottom:12px">Get
+            In Touch</span>
+          <h1>Contact Us</h1>
+          <p>We'd love to hear from you. Reach out for inquiries, commissions, or gallery visits.</p>
+        </div>
+      </div>
+      <section class="section" style="padding-top:40px">
+        <div class="container">
+          <div class="contact-grid">
+            <div class="contact-info fade-in">
+              <h2 style="font-family:var(--font-heading);font-size:1.6rem;margin-bottom:24px">Visit Our Gallery</h2>
+              <div class="contact-item">
+                <i class="fas fa-map-marker-alt"></i>
+                <div>
+                  <h4>Address</h4>
+                  <p>547 West 27th Street, Suite 200<br>Chelsea, New York, NY 10001</p>
+                </div>
+              </div>
+              <div class="contact-item">
+                <i class="fas fa-phone"></i>
+                <div>
+                  <h4>Phone</h4>
+                  <p>+1 (212) 555-0184</p>
+                </div>
+              </div>
+              <div class="contact-item">
+                <i class="fas fa-envelope"></i>
+                <div>
+                  <h4>Email</h4>
+                  <p>hello@artisangallery.com</p>
+                </div>
+              </div>
+              <div class="contact-item">
+                <i class="fas fa-clock"></i>
+                <div>
+                  <h4>Gallery Hours</h4>
+                  <p>Tue — Sat: 10:00 AM — 7:00 PM<br>Sun: 12:00 PM — 5:00 PM<br>Mon: Closed</p>
+                </div>
+              </div>
+              <div style="margin-top:20px">
+                <h4 style="margin-bottom:12px">Follow Us</h4>
+                <div class="footer-social">
+                  <a href="#"><i class="fab fa-instagram"></i></a>
+                  <a href="#"><i class="fab fa-facebook-f"></i></a>
+                  <a href="#"><i class="fab fa-twitter"></i></a>
+                  <a href="#"><i class="fab fa-pinterest"></i></a>
+                </div>
+              </div>
+            </div>
+            <div class="contact-form fade-in">
+              <h3 style="font-family:var(--font-heading);font-size:1.4rem;margin-bottom:24px">Send a Message</h3>
+              <div class="form-row">
+                <div class="form-group"><label>First Name</label><input type="text" placeholder="John"></div>
+                <div class="form-group"><label>Last Name</label><input type="text" placeholder="Doe"></div>
+              </div>
+              <div class="form-group"><label>Email Address</label><input type="email" placeholder="your@email.com">
+              </div>
+              <div class="form-group"><label>Subject</label>
+                <select>
+                  <option>General Inquiry</option>
+                  <option>Commission Request</option>
+                  <option>Gallery Visit</option>
+                  <option>Partnership</option>
+                  <option>Other</option>
+                </select>
+              </div>
+              <div class="form-group"><label>Message</label><textarea
+                  placeholder="Tell us more about your inquiry..."></textarea></div>
+              <button class="btn btn-primary"
+                onclick="showToast('Message sent! We\'ll get back to you within 24 hours.','success')">Send Message <i
+                  class="fas fa-paper-plane"></i></button>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- CHECKOUT PAGE -->
+    <div id="page-checkout" class="checkout-page" style="display:none">
+      <div class="container">
+        <h2 style="font-family:var(--font-heading);font-size:2rem;margin-bottom:40px"><i class="fas fa-arrow-left"
+            style="font-size:1rem;margin-right:12px;cursor:pointer" onclick="navigateTo('gallery')"></i> Checkout</h2>
+        <div class="checkout-grid">
+          <div>
+            <!-- Shipping -->
+            <div class="checkout-form">
+              <h3><i class="fas fa-truck" style="margin-right:8px;color:var(--gold)"></i> Shipping Information</h3>
+              <div class="form-row">
+                <div class="form-group"><label>First Name</label><input type="text" id="shipFirst" placeholder="John">
+                </div>
+                <div class="form-group"><label>Last Name</label><input type="text" id="shipLast" placeholder="Doe">
+                </div>
+              </div>
+              <div class="form-group"><label>Email</label><input type="email" id="shipEmail"
+                  placeholder="your@email.com"></div>
+              <div class="form-group"><label>Address</label><input type="text" id="shipAddress"
+                  placeholder="123 Art Street"></div>
+              <div class="form-row">
+                <div class="form-group"><label>City</label><input type="text" id="shipCity" placeholder="New York">
+                </div>
+                <div class="form-group"><label>ZIP Code</label><input type="text" id="shipZip" placeholder="10001">
+                </div>
+              </div>
+              <div class="form-group"><label>Country</label>
+                <select id="shipCountry">
+                  <option>United States</option>
+                  <option>United Kingdom</option>
+                  <option>Canada</option>
+                  <option>Australia</option>
+                  <option>India</option>
+                  <option>Germany</option>
+                  <option>France</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Payment -->
+            <div class="checkout-form payment-section">
+              <h3><i class="fas fa-lock" style="margin-right:8px;color:var(--gold)"></i> Payment Details</h3>
+              <div class="payment-methods">
+                <div class="payment-method active" data-method="card" onclick="selectPaymentMethod('card')">
+                  <i class="fas fa-credit-card"></i><span>Card</span>
+                </div>
+                <div class="payment-method" data-method="wallet" onclick="selectPaymentMethod('wallet')">
+                  <i class="fas fa-wallet"></i><span>Wallet</span>
+                </div>
+                <div class="payment-method" data-method="paypal" onclick="selectPaymentMethod('paypal')">
+                  <i class="fab fa-paypal"></i><span>PayPal</span>
+                </div>
+                <div class="payment-method" data-method="bank" onclick="selectPaymentMethod('bank')">
+                  <i class="fas fa-university"></i><span>Bank</span>
+                </div>
+              </div>
+              <div id="cardPayment">
+                <div class="card-preview">
+                  <div class="card-chip"></div>
+                  <div class="card-number" id="cardPreviewNumber">•••• •••• •••• ••••</div>
+                  <div class="card-bottom">
+                    <div class="card-name" id="cardPreviewName">YOUR NAME</div>
+                    <div class="card-expiry" id="cardPreviewExpiry">MM/YY</div>
+                  </div>
+                </div>
+                <div class="form-group card-input-group">
+                  <label>Card Number</label>
+                  <input type="text" id="cardNumber" placeholder="1234 5678 9012 3456" maxlength="19"
+                    oninput="formatCard(this)">
+                  <span class="card-icon"><i class="fas fa-credit-card"></i></span>
+                </div>
+                <div class="form-row">
+                  <div class="form-group"><label>Expiry Date</label><input type="text" id="cardExpiry"
+                      placeholder="MM/YY" maxlength="5" oninput="formatExpiry(this)"></div>
+                  <div class="form-group"><label>CVV</label><input type="text" id="cardCVV" placeholder="123"
+                      maxlength="4"></div>
+                </div>
+                <div class="form-group"><label>Name on Card</label><input type="text" id="cardName"
+                    placeholder="John Doe" oninput="updateCardPreview()"></div>
+              </div>
+
+              <!-- Wallet Payment -->
+              <div id="walletPayment" style="display:none">
+                <div class="wallet-card">
+                  <div class="wallet-header">
+                    <div class="wallet-icon-wrap"><i class="fas fa-wallet"></i></div>
+                    <div>
+                      <div class="wallet-label">Artisan Wallet</div>
+                      <div class="wallet-balance-label">Available Balance</div>
+                    </div>
+                  </div>
+                  <div class="wallet-balance" id="walletBalanceDisplay">$10,000.00</div>
+                  <div class="wallet-actions-row">
+                    <button class="wallet-action-btn" onclick="showTopUpModal()">
+                      <i class="fas fa-plus-circle"></i> Add Money
+                    </button>
+                    <button class="wallet-action-btn" onclick="showWalletHistory()">
+                      <i class="fas fa-history"></i> History
+                    </button>
+                  </div>
+                </div>
+                <div class="wallet-pay-info">
+                  <div class="wallet-pay-row">
+                    <span>Order Total</span>
+                    <span class="wallet-pay-amount" id="walletOrderTotal">$0.00</span>
+                  </div>
+                  <div class="wallet-pay-row">
+                    <span>Remaining Balance</span>
+                    <span class="wallet-pay-remaining" id="walletRemaining">$10,000.00</span>
+                  </div>
+                </div>
+                <div class="wallet-status" id="walletStatus"></div>
+                <div class="form-group" style="margin-top:16px">
+                  <label>Enter Wallet PIN</label>
+                  <input type="password" id="walletPin" placeholder="••••" maxlength="4"
+                    style="text-align:center;letter-spacing:12px;font-size:1.3rem">
+                  <p style="font-size:0.78rem;color:var(--text-muted);margin-top:6px">Demo PIN: 1234</p>
+                </div>
+              </div>
+
+              <div id="paypalPayment" style="display:none;text-align:center;padding:30px">
+                <i class="fab fa-paypal" style="font-size:3rem;color:#0070ba;margin-bottom:16px"></i>
+                <p style="color:var(--text-secondary)">You will be redirected to PayPal to complete your payment
+                  securely.</p>
+              </div>
+              <div id="bankPayment" style="display:none;text-align:center;padding:30px">
+                <i class="fas fa-university" style="font-size:3rem;color:var(--gold);margin-bottom:16px"></i>
+                <p style="color:var(--text-secondary)">Bank transfer details will be sent to your email after order
+                  confirmation.</p>
+              </div>
+              <div class="form-divider"></div>
+              <button class="btn btn-primary" id="payBtn" style="width:100%;justify-content:center;font-size:1rem"
+                onclick="processPayment()">
+                <i class="fas fa-lock"></i> Pay Now — <span id="payAmount">$0.00</span>
+              </button>
+              <p style="text-align:center;margin-top:12px;font-size:0.78rem;color:var(--text-muted)">
+                <i class="fas fa-shield-alt" style="margin-right:4px"></i> Secured with 256-bit SSL encryption
+              </p>
+            </div>
+          </div>
+          <!-- Order Summary -->
+          <div class="order-summary">
+            <h3>Order Summary</h3>
+            <div id="checkoutItems"></div>
+            <div class="summary-totals">
+              <div class="summary-row"><span>Subtotal</span><span id="summarySubtotal">$0.00</span></div>
+              <div class="summary-row"><span>Shipping</span><span id="summaryShipping">Free</span></div>
+              <div class="summary-row"><span>Insurance</span><span id="summaryInsurance">$0.00</span></div>
+              <div class="summary-row"><span>Tax (8.875%)</span><span id="summaryTax">$0.00</span></div>
+              <div class="summary-row total"><span>Total</span><span class="amount" id="summaryTotal">$0.00</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer" id="siteFooter">
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <div class="logo">Artisan <span>Gallery</span></div>
+          <p>Connecting discerning collectors with extraordinary artists since 2014. Every artwork authenticated and
+            delivered with provenance.</p>
+          <div class="footer-social">
+            <a href="#" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+            <a href="#" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
+            <a href="#" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
+            <a href="#" aria-label="Pinterest"><i class="fab fa-pinterest"></i></a>
+            <a href="#" aria-label="YouTube"><i class="fab fa-youtube"></i></a>
+          </div>
+        </div>
+        <div class="footer-col">
+          <h4>Quick Links</h4>
+          <a href="#" onclick="navigateTo('gallery')">Gallery</a>
+          <a href="#" onclick="navigateTo('about')">About Us</a>
+          <a href="#" onclick="navigateTo('contact')">Contact</a>
+          <a href="#">Art Advisory</a>
+          <a href="#">Gift Cards</a>
+        </div>
+        <div class="footer-col">
+          <h4>Support</h4>
+          <a href="#">Shipping & Returns</a>
+          <a href="#">FAQ</a>
+          <a href="#">Size Guide</a>
+          <a href="#">Care Instructions</a>
+          <a href="#">Track Order</a>
+        </div>
+        <div class="footer-col">
+          <h4>Legal</h4>
+          <a href="#">Privacy Policy</a>
+          <a href="#">Terms of Service</a>
+          <a href="#">Cookie Policy</a>
+          <a href="#">Authenticity</a>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>&copy; 2026 Artisan Gallery. All rights reserved.</p>
+        <div class="payment-icons">
+          <span>VISA</span><span>MASTERCARD</span><span>AMEX</span><span>PAYPAL</span><span>WALLET</span>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script src="js/app.js"></script>
+  <script src="js/cart.js"></script>
+  <script src="js/payment.js"></script>
+  <script src="js/animations.js"></script>
+</body>
+
+</html>
