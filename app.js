@@ -3,6 +3,7 @@
    Product Data, Routing, UI Interactions
    ============================================ */
 
+
 // ==================== PRODUCT DATA ====================
 const products = [
   {
